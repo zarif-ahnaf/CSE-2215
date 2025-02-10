@@ -3,12 +3,10 @@ name: Build Gluon App
 on:
   push:
     branches:
-      - main
       - master
   pull_request:
     branches:
       - main
-      - master
 
 jobs:
   build:
@@ -28,13 +26,11 @@ jobs:
           java-version: '23'
 
       - name: Install GluonFX Plugin
-        run: |
-          mvn gluonfx:link
+        run: mvn gluonfx:link
         shell: bash
 
       - name: Build Native Image
-        run: |
-          mvn gluonfx:nativerun
+        run: mvn gluonfx:nativerun
         shell: bash
 
       - name: Upload Artifacts (Windows)
@@ -60,7 +56,29 @@ jobs:
 
   android:
     runs-on: ubuntu-latest
-    name: Build Android APK
+    name: Build Android APK with Maven
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 23
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '23'
+
+      - name: Build APK
+        run: mvn gluonfx:android
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: gluon-android
+          path: target/android/*.apk
+
+  ios:
+    runs-on: macos-latest
+    name: Build iOS App with Maven
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -71,33 +89,11 @@ jobs:
           distribution: 'temurin'
           java-version: '23'
 
-      - name: Build APK
-        run: mvn android:assembleDebug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: gluon-android
-          path: target/outputs/apk/debug/*.apk
-
-  ios:
-    runs-on: macos-latest
-    name: Build iOS App
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up JDK
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '23'
-
       - name: Build iOS App
-        run: mvn ios:assemble
+        run: mvn gluonfx:ios
 
       - name: Upload iOS Build
         uses: actions/upload-artifact@v4
         with:
           name: gluon-ios
-          path: target/gluonfx/aarch64-ios/
+          path: target/ios/*.ipa
